@@ -8,56 +8,50 @@
     http://www.springframework.org/schema/security
     http://www.springframework.org/schema/security/spring-security.xsd">
 
+    <!-- 指定不需要检查 -->
+    <security:http pattern="/login.html" security="none" />
+    <security:http pattern="/loginError.html" security="none" />
+    <security:http pattern="/logoutSuccess.html" security="none" />
 
-    <!--
-        配置如何拦截用户请求
-        auto-config="true"：将自动配置几种常用的权限控制机制，包括form, anonymous, rememberMe。
-    -->
     <security:http auto-config="true">
-        <!--
-            我们利用intercept-url来判断用户需要具有何种权限才能访问对应的url资源，
-            可以在pattern中指定一个特定的url资源，也可以使用通配符指定一组类似的url资源。
-            例子中定义的两个intercepter-url，第一个用来控制对/admin.jsp的访问，第二个使用了通配符/**，
-            说明它将控制对系统中所有url资源的访问。
+        <security:form-login login-page="/login.html"
+                             username-parameter="username"
+                             password-parameter="password"
+                             login-processing-url="/login.do"
+                             default-target-url="/index.html"
+                             always-use-default-target="true"
+                             authentication-success-handler-ref="authenticationSuccessHandlerImpl"
+                             authentication-failure-handler-ref="authenticationFailureHandlerImpl"
+        />
 
-            在实际使用中，Spring Security采用的是一种就近原则，
-            就是说当用户访问的url资源满足多个intercepter-url时，
-            系统将使用第一个符合条件的intercept-url进行权限控制。
-            在我们这个例子中就是，当用户访问/admin.jsp时，虽然两个intercept-url都满足要求，
-            但因为第一个intercept-url排在上面，所以Spring Security会使用第一个intercept-url中的配置处理对/admin.jsp的请求
-            ，也就是说，只有那些拥有了ROLE_ADMIN权限的用户才能访问/admin.jsp。
+        <!-- access-denied 403 错误解决  -->
+        <security:access-denied-handler ref="accessDeniedHandlerImpl"></security:access-denied-handler>
 
-            access指定的权限部分比较有趣，
-            大家可以注意到这些权限标示符都是以ROLE_开头的，
-            实际上这与Spring Security中的Voter机制有着千丝万缕的联系，
-            只有包含了特定前缀的字符串才会被Spring Security处理。
-            目前来说我们只需要记住这一点就可以了，在教程以后的部分中我们会详细讲解Voter的内容。
+        <!-- logout的一些设置 -->
+        <security:logout logout-url="/logout.do" delete-cookies="username" success-handler-ref="logoutSuccessHandlerImpl" />
 
-         -->
-        <security:intercept-url pattern="/admin.html" access="ROLE_ADMIN"></security:intercept-url>
-        <security:intercept-url pattern="/**" access="ROLE_USER"></security:intercept-url>
+        <!-- 记住我功能
+        <security:remember-me key="remember-me-salt" />-->
+
+        <!-- 表示匿名用户可以访问
+        <security:intercept-url pattern="/ogin.html" access="IS_AUTHENTICATED_ANONYMOUSLY"/> -->
+        <!--<security:intercept-url pattern="/order/list.do" access="orderList" />
+        <security:intercept-url pattern="/order/add.do" access="orderAdd" />
+        <security:intercept-url pattern="/order/update.do" access="orderUpdate" />
+        <security:intercept-url pattern="/order/delete.do" access="orderDelete" />-->
+        <!--<security:intercept-url pattern="/admin.do" access="ROLE_ADMIN" requires-channel="https" />-->
+        <security:intercept-url pattern="/**" access="ROLE_USER" />
+        <!--<security:port-mappings>
+            <security:port-mapping http="8080" https="8081"/>
+        </security:port-mappings>-->
     </security:http>
 
     <security:authentication-manager>
-        <security:authentication-provider>
-            <!--
-                user-service中定义了两个用户，admin和user。为了简便起见，我们使用明文定义了两个用户对应的密码，
-                这只是为了当前演示的方便，之后的例子中我们会使用Spring Security提供的加密方式，避免用户密码被他人窃取。
-            -->
-            <security:user-service>
-                <!--
-                    user-service中定义了两个用户，admin和user。为了简便起见，我们使用明文定义了两个用户对应的密码，
-                    这只是为了当前演示的方便，之后的例子中我们会使用Spring Security提供的加密方式，避免用户密码被他人窃取。
-
-                    最最重要的部分是authorities，这里定义了这个用户登陆之后将会拥有的权限，
-                    它与上面intercept-url中定义的权限内容一一对应。每个用户可以同时拥有多个权限，
-                    例子中的admin用户就拥有ROLE_ADMIN和ROLE_USER两种权限，这使得admin用户在登陆之后可以访问ROLE_ADMIN和ROLE_USER允许访问的所有资源。
-
-                    与之对应的是，user用户就只拥有ROLE_USER权限，所以他只能访问ROLE_USER允许访问的资源，而不能访问ROLE_ADMIN允许访问的资源。
-                -->
+        <security:authentication-provider user-service-ref="userDetailsServiceImpl" >
+            <!--<security:user-service>
                 <security:user name="admin" password="admin" authorities="ROLE_USER,ROLE_ADMIN" />
                 <security:user name="user" password="user" authorities="ROLE_USER" />
-            </security:user-service>
+            </security:user-service>-->
         </security:authentication-provider>
     </security:authentication-manager>
 
