@@ -29,7 +29,7 @@ create table user(
 	username varchar(25) COMMENT '账号',
 	realname varchar(25) COMMENT '真实姓名',
 	password varchar(25) COMMENT '登录密码',
-	create_demo datetime COMMENT '创建日期',
+	create_date datetime COMMENT '创建日期',
 	last_login_time datetime COMMENT '最后登录日期',
 	enabled tinyint(1) COMMENT '是否可用',
 	account_non_expired tinyint(1) COMMENT '是否过期',

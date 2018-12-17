@@ -43,18 +43,19 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         // 根据username从数据库中获取信息
         User user = userMapper.findByUsername(username);
 
-        if (user != null) {
-            // 如果用户不为空，查询权限
-            List<Permission> permissionList = permissionMapper.findByUserId(user.getId());
-            for (Permission permission : permissionList) {
-                GrantedAuthority grantedAuthority = new SimpleGrantedAuthority(permission.getTag());
-                authorities.add(grantedAuthority);
-            }
-            user.setAuthorities(authorities);
-
-            log.info("user permission：{}", user.getAuthorities());
-
+        if (user == null) {
+            throw new UsernameNotFoundException("当前用户信息不存在！！！");
         }
+
+        // 如果用户不为空，查询权限
+        List<Permission> permissionList = permissionMapper.findByUserId(user.getId());
+        for (Permission permission : permissionList) {
+            GrantedAuthority grantedAuthority = new SimpleGrantedAuthority(permission.getTag());
+            authorities.add(grantedAuthority);
+        }
+        user.setAuthorities(authorities);
+
+        log.info("user permission：{}", user.getAuthorities());
         return user;
     }
 
