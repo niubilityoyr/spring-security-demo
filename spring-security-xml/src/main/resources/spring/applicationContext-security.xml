@@ -9,12 +9,13 @@
     http://www.springframework.org/schema/security/spring-security.xsd">
 
     <!-- 指定不需要检查 -->
-    <security:http pattern="/login.html" security="none" />
-    <security:http pattern="/loginError.html" security="none" />
-    <security:http pattern="/logoutSuccess.html" security="none" />
-    <security:http pattern="/403.html" security="none" />
+    <security:http pattern="/login.html" security="none"/>
+    <security:http pattern="/loginError.html" security="none"/>
+    <security:http pattern="/logoutSuccess.html" security="none"/>
+    <security:http pattern="/403.html" security="none"/>
 
-    <security:http auto-config="true">
+
+    <security:http use-expressions="true">
         <security:form-login login-page="/login.html"
                              username-parameter="username"
                              password-parameter="password"
@@ -25,37 +26,71 @@
                              authentication-failure-handler-ref="authenticationFailureHandlerImpl"
         />
 
-        <!-- access-denied 403 错误解决  -->
-        <security:access-denied-handler ref="accessDeniedHandlerImpl"></security:access-denied-handler>
+        <security:csrf disabled="true" />
+
+        <!-- 定义记住我功能，要指定一个userDetailsService，必须要指定，不指定记住我功能会不可用 -->
+        <security:remember-me data-source-ref="dataSource" key="security-remember" token-validity-seconds="60" user-service-ref="userDetailsServiceImpl"/>
 
         <!-- logout的一些设置 -->
-        <security:logout logout-url="/logout.do" delete-cookies="username" success-handler-ref="logoutSuccessHandlerImpl" />
+        <security:logout logout-url="/logout.do" delete-cookies="username"
+                         success-handler-ref="logoutSuccessHandlerImpl"/>
 
-        <!-- 记住我功能
-        <security:remember-me key="remember-me-salt" />-->
+        <!-- access-denied 403 错误解决  -->
+        <security:access-denied-handler ref="accessDeniedHandlerImpl"></security:access-denied-handler>
 
         <!-- 表示匿名用户可以访问
         <security:intercept-url pattern="/ogin.html" access="IS_AUTHENTICATED_ANONYMOUSLY"/> -->
 
-        <security:intercept-url pattern="/order/update.do" access="ROLE_ADMIN" />
-        <security:intercept-url pattern="/order/delete.do" access="ROLE_ADMIN" />
-        <security:intercept-url pattern="/**" access="ROLE_USER" />
+        <security:intercept-url pattern="/order/update.do" access="hasAnyRole('ROLE_ADMIN', 'ROLE_USER')"/>
+        <security:intercept-url pattern="/order/delete.do" access="hasRole('ROLE_ADMIN')"/>
+        <security:intercept-url pattern="/**" access="hasRole('ROLE_USER')"/>
         <!--<security:intercept-url pattern="/admin.do" access="ROLE_ADMIN" requires-channel="https" />-->
         <!--<security:port-mappings>
             <security:port-mapping http="8080" https="8081"/>
         </security:port-mappings>-->
     </security:http>
 
-    <security:authentication-manager>
+    <!--<security:authentication-manager>
         <security:authentication-provider user-service-ref="userDetailsServiceImpl" >
+            &lt;!&ndash; 密码加密 &ndash;&gt;
             <security:password-encoder hash="md5" >
-                <security:salt-source system-wide="abc" ></security:salt-source>
+                &lt;!&ndash; 密码加盐 &ndash;&gt;
+                <security:salt-source user-property="username" ></security:salt-source>
             </security:password-encoder>
-            <!--<security:user-service>
+
+            &lt;!&ndash;<security:user-service>
                 <security:user name="admin" password="admin" authorities="ROLE_USER,ROLE_ADMIN" />
                 <security:user name="user" password="user" authorities="ROLE_USER" />
-            </security:user-service>-->
+            </security:user-service>&ndash;&gt;
+        </security:authentication-provider>
+    </security:authentication-manager>-->
+
+    <security:authentication-manager>
+        <!-- 使用可以缓存UserDetails的CachingUserDetailsService -->
+        <security:authentication-provider user-service-ref="cachingUserDetailsService">
+            <!-- 密码加密 -->
+            <security:password-encoder hash="md5">
+                <!-- 密码加盐 -->
+                <security:salt-source user-property="username"></security:salt-source>
+            </security:password-encoder>
         </security:authentication-provider>
     </security:authentication-manager>
+
+    <!-- 使用缓存 -->
+    <bean id="cachingUserDetailsService"
+          class="org.springframework.security.config.authentication.CachingUserDetailsService">
+        <!-- 构造函数 初始化：真正加载UserDetails的UserDetailsService -->
+        <constructor-arg ref="userDetailsServiceImpl"/>
+        <!-- 配置缓存 -->
+        <property name="userCache">
+            <bean class="org.springframework.security.core.userdetails.cache.EhCacheBasedUserCache">
+                <property name="cache" ref="ehcache4UserDetails"/>
+            </bean>
+        </property>
+    </bean>
+
+    <!-- 将使用默认的CacheManager创建一个名为ehcache4UserDetails的Ehcache对象 -->
+    <bean id="ehcache4UserDetails" class="org.springframework.cache.ehcache.EhCacheFactoryBean"/>
+
 
 </beans>

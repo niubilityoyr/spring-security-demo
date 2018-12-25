@@ -2,7 +2,7 @@ package com.oyr.security.handler;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.access.AccessDeniedHandler;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -14,7 +14,7 @@ import java.io.IOException;
  * Create by 欧阳荣
  * 2018/12/17 0:40
  */
-@Service
+@Component
 public class AccessDeniedHandlerImpl implements AccessDeniedHandler {
 
     public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException e) throws IOException, ServletException {

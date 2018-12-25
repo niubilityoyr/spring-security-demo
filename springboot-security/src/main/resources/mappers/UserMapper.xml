@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.oyr.dao.UserMapper" >
+  <resultMap id="BaseResultMap" type="com.oyr.domain.User" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="username" property="username" jdbcType="VARCHAR" />
+    <result column="realname" property="realname" jdbcType="VARCHAR" />
+    <result column="password" property="password" jdbcType="VARCHAR" />
+    <result column="create_date" property="createDate" jdbcType="TIMESTAMP" />
+    <result column="last_login_time" property="lastLoginTime" jdbcType="TIMESTAMP" />
+    <result column="enabled" property="enabled" jdbcType="BIT" />
+    <result column="account_non_expired" property="accountNonExpired" jdbcType="BIT" />
+    <result column="account_non_locked" property="accountNonLocked" jdbcType="BIT" />
+    <result column="credentials_non_expired" property="credentialsNonExpired" jdbcType="BIT" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, username, realname, password, create_date, last_login_time, enabled, account_non_expired,
+    account_non_locked, credentials_non_expired
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select
+    <include refid="Base_Column_List" />
+    from user
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from user
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.oyr.domain.User" >
+    insert into user (id, username, realname,
+    password, create_date, last_login_time,
+    enabled, account_non_expired, account_non_locked,
+    credentials_non_expired)
+    values (#{id,jdbcType=INTEGER}, #{username,jdbcType=VARCHAR}, #{realname,jdbcType=VARCHAR},
+    #{password,jdbcType=VARCHAR}, #{createDemo,jdbcType=TIMESTAMP}, #{lastLoginTime,jdbcType=TIMESTAMP},
+    #{enabled,jdbcType=BIT}, #{accountNonExpired,jdbcType=BIT}, #{accountNonLocked,jdbcType=BIT},
+    #{credentialsNonExpired,jdbcType=BIT})
+  </insert>
+  <insert id="insertSelective" parameterType="com.oyr.domain.User" >
+    insert into user
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="username != null" >
+        username,
+      </if>
+      <if test="realname != null" >
+        realname,
+      </if>
+      <if test="password != null" >
+        password,
+      </if>
+      <if test="createDemo != null" >
+        create_date,
+      </if>
+      <if test="lastLoginTime != null" >
+        last_login_time,
+      </if>
+      <if test="enabled != null" >
+        enabled,
+      </if>
+      <if test="accountNonExpired != null" >
+        account_non_expired,
+      </if>
+      <if test="accountNonLocked != null" >
+        account_non_locked,
+      </if>
+      <if test="credentialsNonExpired != null" >
+        credentials_non_expired,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="username != null" >
+        #{username,jdbcType=VARCHAR},
+      </if>
+      <if test="realname != null" >
+        #{realname,jdbcType=VARCHAR},
+      </if>
+      <if test="password != null" >
+        #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="createDemo != null" >
+        #{createDemo,jdbcType=TIMESTAMP},
+      </if>
+      <if test="lastLoginTime != null" >
+        #{lastLoginTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="enabled != null" >
+        #{enabled,jdbcType=BIT},
+      </if>
+      <if test="accountNonExpired != null" >
+        #{accountNonExpired,jdbcType=BIT},
+      </if>
+      <if test="accountNonLocked != null" >
+        #{accountNonLocked,jdbcType=BIT},
+      </if>
+      <if test="credentialsNonExpired != null" >
+        #{credentialsNonExpired,jdbcType=BIT},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.oyr.domain.User" >
+    update user
+    <set >
+      <if test="username != null" >
+        username = #{username,jdbcType=VARCHAR},
+      </if>
+      <if test="realname != null" >
+        realname = #{realname,jdbcType=VARCHAR},
+      </if>
+      <if test="password != null" >
+        password = #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="createDemo != null" >
+        create_date = #{createDemo,jdbcType=TIMESTAMP},
+      </if>
+      <if test="lastLoginTime != null" >
+        last_login_time = #{lastLoginTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="enabled != null" >
+        enabled = #{enabled,jdbcType=BIT},
+      </if>
+      <if test="accountNonExpired != null" >
+        account_non_expired = #{accountNonExpired,jdbcType=BIT},
+      </if>
+      <if test="accountNonLocked != null" >
+        account_non_locked = #{accountNonLocked,jdbcType=BIT},
+      </if>
+      <if test="credentialsNonExpired != null" >
+        credentials_non_expired = #{credentialsNonExpired,jdbcType=BIT},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.oyr.domain.User" >
+    update user
+    set username = #{username,jdbcType=VARCHAR},
+    realname = #{realname,jdbcType=VARCHAR},
+    password = #{password,jdbcType=VARCHAR},
+    create_date = #{createDemo,jdbcType=TIMESTAMP},
+    last_login_time = #{lastLoginTime,jdbcType=TIMESTAMP},
+    enabled = #{enabled,jdbcType=BIT},
+    account_non_expired = #{accountNonExpired,jdbcType=BIT},
+    account_non_locked = #{accountNonLocked,jdbcType=BIT},
+    credentials_non_expired = #{credentialsNonExpired,jdbcType=BIT}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+
+  <select id="findByUsername" resultMap="BaseResultMap">
+    SELECT
+    <include refid="Base_Column_List" />
+    FROM user WHERE username = #{username, jdbcType=VARCHAR}
+  </select>
+
+</mapper>
