@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8081
 
 spring:
   mvc:
@@ -40,10 +40,23 @@ mybatis:
   mapper-locations: classpath:mappers/*.xml
   type-aliases-package: com.oyr.admin
 
-#pagehelper
+# pagehelper
 pagehelper:
   helperDialect: mysql
   reasonable: true
   supportMethodsArguments: true
   params: count=countSql
   returnPageInfo: check
+
+
+# 自定义cas的一些属性配置
+security:
+  cas:
+    server: # cas server 的配置
+      host: https://server.cas.com:8443/cas
+      login: /login
+      logout: /logout
+    service: # cas client 配置
+      host: http://client1.cas.com:8081 # 应用的host
+      login: /login  # 应用登录的地址
+      logout: /logout   # 应用登出的地址

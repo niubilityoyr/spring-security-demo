@@ -54,6 +54,6 @@ public class ImageCode {
     }
 
     public boolean isExpried() {
-
+        return LocalDateTime.now().isAfter(this.getExpireTime());
     }
 }

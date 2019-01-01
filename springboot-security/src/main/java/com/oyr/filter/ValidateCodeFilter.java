@@ -4,7 +4,8 @@ import com.oyr.controller.ValidateCodeController;
 import com.oyr.exception.ValidateCodeException;
 import com.oyr.validate.code.ImageCode;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.web.bind.ServletRequestBindingException;
 import org.springframework.web.bind.ServletRequestUtils;
@@ -22,11 +23,17 @@ import java.io.IOException;
  */
 public class ValidateCodeFilter extends OncePerRequestFilter {
 
-    @Autowired
+    private Logger logger = LoggerFactory.getLogger(getClass());
+
     private AuthenticationFailureHandler authenticationFailureHandler;
+
+    public void setAuthenticationFailureHandler(AuthenticationFailureHandler authenticationFailureHandler) {
+        this.authenticationFailureHandler = authenticationFailureHandler;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        logger.info("=====判断是否需要验证验证码=====");
         // 拦截特定的uri，其他uri直接放行
         if (request.getRequestURI().equals("/authentication/login")
                 && StringUtils.equalsIgnoreCase(request.getMethod(), "post")) {
@@ -66,11 +73,11 @@ public class ValidateCodeFilter extends OncePerRequestFilter {
             throw new ValidateCodeException("验证码已过期");
         }
 
-        if (!StringUtils.equals(codeInSession.getCode(), codeInRequest)) {
+        if (!StringUtils.equals(imageCode.getCode(), codeInRequest)) {
             throw new ValidateCodeException("验证码不匹配");
         }
 
-        request.getRequest().getSession().removeAttribute();
+        request.getRequest().getSession().removeAttribute(ValidateCodeController.VALIDATE_CODE_KEY);
     }
 
 }

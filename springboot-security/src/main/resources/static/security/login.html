@@ -9,7 +9,7 @@
     <form action="/authentication/login" method="post">
         username:<input type="text" name="username"/><br/>
         password:<input type="password" name="password"/><br/>
-        验证码：<img src="/validateCode/code"/> <input type="text"/><br/>
+        验证码：<img src="/validateCode/code"/> <input name="code" type="text"/><br/>
         <!-- security记住我功能实现，name：_spring_security_remember_me -->
         <input name="remember_me" type="checkbox" value="true"/>记住我<br/>
         <input type="submit" name="submit">

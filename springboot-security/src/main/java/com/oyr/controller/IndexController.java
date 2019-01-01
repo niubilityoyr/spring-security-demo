@@ -40,4 +40,9 @@ public class IndexController {
         return "/security/logoutSuccess";
     }
 
+    @RequestMapping(value = "/session/invalid", method = RequestMethod.GET)
+    public String sessionInvalid(){
+        return "/security/sessionInvalid";
+    }
+
 }

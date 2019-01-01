@@ -143,18 +143,16 @@ public class User implements UserDetails {
 
     @Override
     public String toString() {
-        return "User{" +
-                "id=" + id +
-                ", username='" + username + '\'' +
-                ", realname='" + realname + '\'' +
-                ", password='" + password + '\'' +
-                ", createDate=" + createDate +
-                ", lastLoginTime=" + lastLoginTime +
-                ", enabled=" + enabled +
-                ", accountNonExpired=" + accountNonExpired +
-                ", accountNonLocked=" + accountNonLocked +
-                ", credentialsNonExpired=" + credentialsNonExpired +
-                ", authorities=" + authorities +
-                '}';
+        return this.username;
+    }
+
+    @Override
+    public int hashCode() {
+        return this.username.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return this.toString().equals(obj.toString());
     }
 }
