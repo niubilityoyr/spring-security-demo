@@ -42,15 +42,13 @@ public class MyUserDetailsService implements UserDetailsService, AuthenticationU
         }
 
         // 如果用户不为空，查询权限
-        Set<GrantedAuthority> authorities = new HashSet<>();
         List<Permission> permissionList = permissionService.findListByUserId(user.getId());
+        List<GrantedAuthority> authorities = new ArrayList<>();
         for (Permission permission : permissionList) {
             GrantedAuthority grantedAuthority = new SimpleGrantedAuthority(permission.getTag());
             authorities.add(grantedAuthority);
         }
-        List<GrantedAuthority> list = new ArrayList<>();
-        list.addAll(authorities);
-        user.setAuthorities(list);
+        user.setAuthorities(authorities);
         return user;
     }
 

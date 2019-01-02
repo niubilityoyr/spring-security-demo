@@ -3,6 +3,7 @@ package com.oyr.config;
 import com.oyr.domain.Permission;
 import com.oyr.properties.CasServerConfig;
 import com.oyr.properties.CasServiceConfig;
+import com.oyr.service.MyFilterSecurityInterceptor;
 import com.oyr.service.PermissionService;
 import org.jasig.cas.client.proxy.ProxyGrantingTicketStorageImpl;
 import org.jasig.cas.client.session.SingleSignOutFilter;
@@ -10,6 +11,7 @@ import org.jasig.cas.client.session.SingleSignOutHttpSessionListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.cas.ServiceProperties;
 import org.springframework.security.cas.web.CasAuthenticationFilter;
@@ -19,8 +21,10 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.annotation.web.configurers.ExpressionUrlAuthorizationConfigurer;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
@@ -110,12 +114,22 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     // ===== cas 单点登出 end
 
+/*    public MyFilterSecurityInterceptor myFilterSecurityInterceptor(AccessDecisionManager myAccessDecisionManager, ) {
+        MyFilterSecurityInterceptor myFilterSecurityInterceptor = new MyFilterSecurityInterceptor();
+        myFilterSecurityInterceptor.setMyAccessDecisionManager(myAccessDecisionManager);
+        myFilterSecurityInterceptor.setSecurityMetadataSource();
+        return myFilterSecurityInterceptor;
+    }*/
+
+    @Autowired
+    private MyFilterSecurityInterceptor myFilterSecurityInterceptor;
+
     @Override
     protected void configure(HttpSecurity http) throws Exception { // 主要做拦截请求
         // 认证的一些设置
-      /*  http.formLogin().loginPage("/authentication/require")
+        http.formLogin().loginPage("/authentication/require")
                 .loginProcessingUrl("/authentication/login").usernameParameter("username").passwordParameter("password")
-                .successHandler(authenticationSuccessHandler).failureHandler(authenticationFailureHandler);*/
+                .successHandler(authenticationSuccessHandler).failureHandler(authenticationFailureHandler);
 
         // 记住我的一些设置
         /*http.rememberMe().tokenRepository(persistentTokenRepository()).userDetailsService(userDetailsService)
@@ -138,10 +152,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         authorizeRequests
                 .antMatchers("/", "/authentication/require", "/login", "/loginError",
                         "/logoutSuccess", "/403", "/validateCode/code", "/session/invalid").permitAll(); // 这些url都是不需要检查权限
-        List<Permission> permissionList = permissionService.findAll(); // 数据库保存的都要鉴权
+        /*List<Permission> permissionList = permissionService.findAll(); // 数据库保存的都要鉴权
         for (Permission permission : permissionList) {
             authorizeRequests.antMatchers(permission.getUrl()).hasAnyAuthority(permission.getTag());
-        }
+        }*/
 
         authorizeRequests.antMatchers("/**").hasAnyAuthority("asdasdasdasd")
                 //anyRequest().authenticated() // 指定后面的所有请求都需要身份认证
@@ -155,23 +169,26 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         // 验证码过滤器添加到处理认证过滤器的前面
 //        http.addFilterBefore(validateCodeFilter, UsernamePasswordAuthenticationFilter.class);
 
+        // FILTER_SECURITY_INTERCEPTOR
+        http.addFilterBefore(myFilterSecurityInterceptor, FilterSecurityInterceptor.class);
+
         // 将应用的登录认证入口改为使用CasAuthenticationEntryPoint
-        http.exceptionHandling().authenticationEntryPoint(authenticationEntryPoint)
+        /*http.exceptionHandling().authenticationEntryPoint(authenticationEntryPoint)
                 .and()
                 .addFilter(casAuthenticationFilter())   // 将 casAuthenticationFilter 新增到过滤器链中
                 .addFilterBefore(singleSignOutFilter(), CasAuthenticationFilter.class) // SingleSignOutFilter放在CasAuthenticationFilter之前
                 .addFilterBefore(requestCasLogoutFilter(), SingleSignOutFilter.class) // 请求登出Cas Server的过滤器，放在Spring Security的登出过滤器之前
-        ;
+        ;*/
     }
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception { // 配置user-detail服务
         // 修改security 认证，使用我们指定的 cas 认证
-        auth.authenticationProvider(casAuthenticationProvider);
+        // auth.authenticationProvider(casAuthenticationProvider);
         // super.configure(auth);
 
         // 从db中取数据信息使用 userDetailsService，并且指定一个密码加密器
-        // auth.userDetailsService(userDetailsService).passwordEncoder(new BCryptPasswordEncoder());
+        auth.userDetailsService(userDetailsService).passwordEncoder(new BCryptPasswordEncoder());
 
        /*
        // 设置一个密码加密器，不然程序会报错，定义两个用户存在内存中，密码必须要加密一下

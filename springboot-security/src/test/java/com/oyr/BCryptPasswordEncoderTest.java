@@ -18,7 +18,7 @@ public class BCryptPasswordEncoderTest {
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         // $2a$10$/e8VuiJVG3hZad3GFoFYkecMBgQ3C3iArq7uF4h.Y3U.MHfIz9Le6
         // $2a$10$Z7u6./Zso.yZ4f5Bq7oX3O6St/HyE2uDSPkBcmw41rmVHLHWa1ho2
-        String a123456 = passwordEncoder.encode("admin");
+        String a123456 = passwordEncoder.encode("a123456");
         System.out.println(a123456);
     }
 
