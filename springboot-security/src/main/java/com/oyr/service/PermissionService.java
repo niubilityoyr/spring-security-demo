@@ -20,4 +20,8 @@ public class PermissionService {
         return permissionMapper.findByUserId(userId);
     }
 
+    public List<Permission> findAll() {
+        return permissionMapper.findAll();
+    }
+
 }

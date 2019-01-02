@@ -1,14 +1,15 @@
 package com.oyr.config;
 
+import com.oyr.domain.Permission;
 import com.oyr.properties.CasServerConfig;
 import com.oyr.properties.CasServiceConfig;
+import com.oyr.service.PermissionService;
 import org.jasig.cas.client.proxy.ProxyGrantingTicketStorageImpl;
 import org.jasig.cas.client.session.SingleSignOutFilter;
 import org.jasig.cas.client.session.SingleSignOutHttpSessionListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.event.EventListener;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.cas.ServiceProperties;
 import org.springframework.security.cas.web.CasAuthenticationFilter;
@@ -16,6 +17,7 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.annotation.web.configurers.ExpressionUrlAuthorizationConfigurer;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
@@ -28,6 +30,7 @@ import org.springframework.security.web.authentication.rememberme.JdbcTokenRepos
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 
 import javax.sql.DataSource;
+import java.util.List;
 
 /**
  * Created by Administrator on 2018/12/21.
@@ -61,6 +64,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private ProxyGrantingTicketStorageImpl proxyGrantingTicketStorage;
 
     @Autowired
+    private PermissionService permissionService;
+
+    @Autowired
     private AuthenticationProvider casAuthenticationProvider;
 
     @Autowired
@@ -72,44 +78,37 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private CasServerConfig casServerConfig;
 
+    // cas 认证过滤器
     public CasAuthenticationFilter casAuthenticationFilter() throws Exception {
         CasAuthenticationFilter casAuthenticationFilter = new CasAuthenticationFilter();
-        casAuthenticationFilter.setAuthenticationManager(authenticationManager()); // 设置认证过滤器
+        casAuthenticationFilter.setAuthenticationManager(authenticationManager()); // 设置认证管理器
         casAuthenticationFilter.setFilterProcessesUrl(casServiceConfig.getLogin()); // 指定处理地址，不指定时默认将会是/j_spring_cas_security_check
         return casAuthenticationFilter;
     }
 
     // 配置一个SingleSignOutHttpSessionListener用于在Session过期时删除SingleSignOutFilter存放的对应信息
-    @EventListener
+    @Bean
     public SingleSignOutHttpSessionListener singleSignOutHttpSessionListener() {
         return new SingleSignOutHttpSessionListener();
     }
 
-    // 单点登出filter
+    // ===== cas 单点登出 start
+
+    // client登出filter
     public SingleSignOutFilter singleSignOutFilter() {
         return new SingleSignOutFilter();
     }
 
-    /*public CasAuthenticationFilter casAuthenticationFilter() throws Exception {
-        CasAuthenticationFilter casAuthenticationFilter = new CasAuthenticationFilter();
-        casAuthenticationFilter.setAuthenticationManager(authenticationManager());
-        casAuthenticationFilter.setServiceProperties(serviceProperties);
-        casAuthenticationFilter.setProxyGrantingTicketStorage(proxyGrantingTicketStorage);
-        casAuthenticationFilter.setProxyReceptorUrl(appServerHostUrl + "/proxyCallback");
-        casAuthenticationFilter.setAuthenticationDetailsSource(new ServiceAuthenticationDetailsSource(serviceProperties));
-        casAuthenticationFilter.setAuthenticationFailureHandler(new SimpleUrlAuthenticationFailureHandler(CasConfing.casServiceFailureHandler));
-        return casAuthenticationFilter;
-    }*/
-
-
-
+    // 当前client 登出成功后，去请求真正的cas server 单点登出，会通知所有的client进行登出
     public LogoutFilter requestCasLogoutFilter() {
-        // 指定登出成功后需要跳转的地址，这里指向Cas Server的登出URL，以实现单点登出
+        // 指定client登出成功后需要跳转的地址，这里指向Cas Server的登出URL，以实现单点登出
         LogoutFilter logoutFilter = new LogoutFilter(casServerConfig.getHost() + casServerConfig.getLogout(), new SecurityContextLogoutHandler());
         // 该Filter需要处理的地址，默认是Spring Security的默认登出地址/j_spring_security_logout
-        logoutFilter.setFilterProcessesUrl("/logout");
+        logoutFilter.setFilterProcessesUrl(casServiceConfig.getLogout());
         return logoutFilter;
     }
+
+    // ===== cas 单点登出 end
 
     @Override
     protected void configure(HttpSecurity http) throws Exception { // 主要做拦截请求
@@ -128,19 +127,26 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         //.deleteCookies("sessionId").logoutSuccessHandler(logoutSuccessHandler);
 
         // 403处理
-//        http.exceptionHandling().accessDeniedHandler(accessDeniedHandler);
+        http.exceptionHandling().accessDeniedHandler(accessDeniedHandler);
 
         // session的一些设置
 //        http.sessionManagement().invalidSessionUrl("/session/invalid").maximumSessions(1);
 
+
         // 权限的一些设置
-        http.authorizeRequests()
-                .antMatchers("/", "/authentication/require", "/login", "/loginError", "/logoutSuccess", "/403", "/validateCode/code", "/session/invalid").permitAll() // 权限的一些设置url
-                .antMatchers("/order*").hasRole("USER") // 指定要访问/order* 都必须要有user
-                .antMatchers("/admin*").hasRole("ADMIN") // 指定要访问/admin* 都必须要有admin
-                .anyRequest().authenticated() // 指定后面的所有请求都需要身份认证
-                .and()
-                .csrf().disable(); // 关闭csrf
+        ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry authorizeRequests = http.authorizeRequests();
+        authorizeRequests
+                .antMatchers("/", "/authentication/require", "/login", "/loginError",
+                        "/logoutSuccess", "/403", "/validateCode/code", "/session/invalid").permitAll(); // 这些url都是不需要检查权限
+        List<Permission> permissionList = permissionService.findAll(); // 数据库保存的都要鉴权
+        for (Permission permission : permissionList) {
+            authorizeRequests.antMatchers(permission.getUrl()).hasAnyAuthority(permission.getTag());
+        }
+
+        authorizeRequests.antMatchers("/**").hasAnyAuthority("asdasdasdasd")
+                //anyRequest().authenticated() // 指定后面的所有请求都需要身份认证
+                .and().csrf().disable(); // 关闭csrf
+
 
         // 验证码过滤器
        /* ValidateCodeFilter validateCodeFilter = new ValidateCodeFilter();
@@ -154,7 +160,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .addFilter(casAuthenticationFilter())   // 将 casAuthenticationFilter 新增到过滤器链中
                 .addFilterBefore(singleSignOutFilter(), CasAuthenticationFilter.class) // SingleSignOutFilter放在CasAuthenticationFilter之前
-
+                .addFilterBefore(requestCasLogoutFilter(), SingleSignOutFilter.class) // 请求登出Cas Server的过滤器，放在Spring Security的登出过滤器之前
         ;
     }
 

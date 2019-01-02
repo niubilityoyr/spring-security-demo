@@ -55,7 +55,7 @@ security:
     server: # cas server 的配置
       host: https://server.cas.com:8443/cas
       login: /login
-      logout: /logout
+      logout: /logout?service=http://client1.cas.com:8081 # logout后面加上当前service的地址，为了logout后可以跳转回当前service
     service: # cas client 配置
       host: http://client1.cas.com:8081 # 应用的host
       login: /login  # 应用登录的地址

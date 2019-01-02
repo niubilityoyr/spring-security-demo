@@ -32,6 +32,7 @@ public class CasSecurityConfig {
     /**
      * 指定service（Cas概念）相关属性，AuthenticationEntryPoint需要这个bean
      * 主要是指定在Cas Server认证成功后将要跳转的地址。
+     *
      * @return
      */
     @Bean
@@ -77,6 +78,7 @@ public class CasSecurityConfig {
      * CasAuthenticationProvider。CasAuthenticationProvider首先会利用TicketValidator（Cas概念）对Authentication中包含的ticket信息进行认证。
      * 认证通过后将利用持有的AuthenticationUserDetailsService根据认证通过后回传的Assertion对象中拥有的username加载用户对应的UserDetails，
      * 即主要是加载用户的相关权限信息GrantedAuthority。然后构造一个CasAuthenticationToken进行返回。之后的逻辑就是正常的Spring Security的逻辑了。
+     *
      * @param properties
      * @param validator
      * @param userDetails
@@ -94,12 +96,4 @@ public class CasSecurityConfig {
         provider.setKey("key4CasAuthenticationProvider"); // 这个key暂时不知道干嘛的
         return provider;
     }
-
-    // 单点登出，跳转到客户端的登出链接
-    /*public LogoutFilter logoutFilter() {
-        LogoutFilter logoutFilter = new LogoutFilter(casServerLogoutUrl, new SecurityContextLogoutHandler());
-        logoutFilter.setFilterProcessesUrl(appServerLogoutUrl); // 应用当前的登出url
-        return logoutFilter;
-    }*/
-
 }

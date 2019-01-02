@@ -19,4 +19,6 @@ public interface PermissionMapper {
     int updateByPrimaryKey(Permission record);
 
     List<Permission> findByUserId(@Param("userId") Integer userId);
+
+    List<Permission> findAll();
 }

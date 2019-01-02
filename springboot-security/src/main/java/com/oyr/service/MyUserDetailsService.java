@@ -16,7 +16,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by Administrator on 2018/12/21.
@@ -40,13 +42,15 @@ public class MyUserDetailsService implements UserDetailsService, AuthenticationU
         }
 
         // 如果用户不为空，查询权限
-        List<GrantedAuthority> authorities = new ArrayList<>();
+        Set<GrantedAuthority> authorities = new HashSet<>();
         List<Permission> permissionList = permissionService.findListByUserId(user.getId());
         for (Permission permission : permissionList) {
             GrantedAuthority grantedAuthority = new SimpleGrantedAuthority(permission.getTag());
             authorities.add(grantedAuthority);
         }
-        user.setAuthorities(authorities);
+        List<GrantedAuthority> list = new ArrayList<>();
+        list.addAll(authorities);
+        user.setAuthorities(list);
         return user;
     }
 

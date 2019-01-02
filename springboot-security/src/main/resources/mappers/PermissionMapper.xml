@@ -92,14 +92,18 @@
   </update>
 
     <select id="findByUserId" resultMap="BaseResultMap">
-    SELECT
-        p.*
-    FROM
-        user_role ur
-    LEFT JOIN role_permission rp ON ur.r_id = rp.r_id
-    LEFT JOIN permission p ON rp.p_id = p.id
-    WHERE
-        ur.u_id = #{userId, jdbcType=INTEGER}
+        SELECT
+            p.*
+        FROM
+            user_role ur
+        LEFT JOIN role_permission rp ON ur.r_id = rp.r_id
+        LEFT JOIN permission p ON rp.p_id = p.id
+        WHERE
+            ur.u_id = #{userId, jdbcType=INTEGER}
   </select>
+
+    <select id="findAll" resultMap="BaseResultMap">
+        SELECT * FROM permission
+    </select>
 
 </mapper>
